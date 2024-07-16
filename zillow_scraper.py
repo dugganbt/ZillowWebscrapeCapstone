@@ -1,6 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 
+"""
+    Function to scrape zillow listings of a zillow clone, as they change frequently. 
+    Uses BeautifulSoup to extract links, prices and addresses of each listing.
+    Returns the data as a tuple of (addresses, prices, links).
+"""
+
 def scrape_zillow_listings():
 
     content = requests.get(f"https://appbrewery.github.io/Zillow-Clone/")
@@ -8,39 +14,30 @@ def scrape_zillow_listings():
     soup = BeautifulSoup(content.text, "html.parser")
 
     # find listing container
-    listing_container = soup.find(class_="List-c11n-8-84-3-photo-cards")
+    listing_containers = soup.find_all(class_="StyledPropertyCardDataWrapper")
 
-    print(listing_container)
+    listing_links = []
+    listing_prices = []
+    listing_addresses = []
 
-    # song_artists = []
+    # iterate over containers
+    for container in listing_containers:
+        try: # other containers not containing the id and class will cause an error
 
-    # # iterate over containers
-    # for container in song_container:
-    #     try: # other containers not containing the id and class will cause an error
-    #         song = container.find('h3', id='title-of-a-story').get_text(strip=True)
-    #         artist = container.find('span', class_='c-label').get_text(strip=True)
+            # retrieve relevant data
+            link = container.find('a', class_='StyledPropertyCardDataArea-anchor')['href']
+            price = container.find('span', class_='PropertyCardWrapper__StyledPriceLine').get_text().split('+')[0].split('/')[0]
+            address = container.find('address').get_text().split("\n")[1].replace('|', '').strip()
 
-    #         # Remove the origin of the song if added
-    #         song = song.split('(From ')[0]
+            # add relevant data to list
+            listing_links.append(link)
+            listing_prices.append(price)
+            listing_addresses.append(address)
 
-    #         # Keep only the main artist
-    #         artist = artist.split(' Featuring')[0]
-    #         artist = artist.split(' &')[0]
+        except AttributeError:
+            continue
 
-    #         # Remove whitespaces at beginning or end
-    #         artist = artist.strip()
-    #         song = song.strip()
-
-    #         song_artists.append((song, artist))
-    #     except AttributeError:
-    #         continue
-
-    # return song_artists
-
-
-
-
-scrape_zillow_listings()
+    return (listing_addresses,listing_prices,listing_links)
 
 
 
